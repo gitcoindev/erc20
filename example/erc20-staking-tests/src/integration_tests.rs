@@ -63,6 +63,7 @@ mod tests {
         let mut fixture = TestFixture::install_contract();
 
         let initial_ali_balance = fixture.balance_of(Key::from(fixture.ali)).unwrap();
+
         assert_eq!(fixture.balance_of(Key::from(fixture.bob)), None);
 
         fixture.transfer(
@@ -75,6 +76,8 @@ mod tests {
             fixture.balance_of(Key::from(fixture.bob)),
             Some(initial_ali_balance)
         );
+        // println!("ali {} bob {:?}", initial_ali_balance, fixture);
+
         assert_eq!(
             fixture.balance_of(Key::from(fixture.ali)),
             Some(U256::zero())
