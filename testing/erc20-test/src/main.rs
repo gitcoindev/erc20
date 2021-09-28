@@ -138,6 +138,21 @@ pub extern "C" fn burn() {
     TestToken::default().burn(owner, amount).unwrap_or_revert();
 }
 
+    /**
+     * @notice We usually require to know who are all the stakeholders.
+     */
+    //address[] internal stakeholders;
+
+    /**
+     * @notice The stakes for each stakeholder.
+     */
+    //mapping(address => uint256) internal stakes;
+
+    /**
+     * @notice The accumulated rewards for each stakeholder.
+     */
+    //mapping(address => uint256) internal rewards;
+
 #[no_mangle]
 fn call() {
     let mut test_token = TestToken::install().unwrap_or_revert();
