@@ -234,6 +234,269 @@ impl ERC20 {
         Ok(())
     }
 
+    /// Creates stake of for an account.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn create_stake(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Removes stake of an account.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn remove_stake(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Returns stake of an account.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn stake_of(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Returns total amount staked.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn total_stakes(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Returns true if is a stakeholder, false otherwise.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn is_stakeholder(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Adds a stakeholder.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn add_stakeholder(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Removes stakeholder.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn remove_stakeholder(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Returns rewards of a stakeholder.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn rewards_of(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Returns total amount of rewards.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn total_rewards(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Calculates reward for a stakeholder.
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn calculate_rewards(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Distribute rewards to all stakeholders
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn distribute_rewards(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
+    /// Withdraws reward
+    ///
+    /// # Security
+    ///
+    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
+    /// public entry point.
+    pub fn withdraw_reward(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_balance = {
+            let balance = self.read_balance(owner);
+            balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+        let new_total_supply = {
+            let total_supply = self.read_total_supply();
+            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
+        };
+        self.write_balance(owner, new_balance);
+        self.write_total_supply(new_total_supply);
+        Ok(())
+    }
+
     /// Installs the ERC20 contract with a custom set of entry points.
     ///
     /// # Warning
