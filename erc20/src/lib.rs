@@ -23,8 +23,10 @@ mod detail;
 pub mod entry_points;
 mod error;
 mod total_supply;
+mod stakes;
 
 use alloc::string::{String, ToString};
+// use alloc::collections::{BTreeSet, BTreeMap};
 
 use once_cell::unsync::OnceCell;
 
@@ -37,7 +39,8 @@ use casper_types::{contracts::NamedKeys, EntryPoints, Key, URef, U256};
 pub use address::Address;
 use constants::{
     ALLOWANCES_KEY_NAME, BALANCES_KEY_NAME, DECIMALS_KEY_NAME, ERC20_TOKEN_CONTRACT_KEY_NAME,
-    NAME_KEY_NAME, SYMBOL_KEY_NAME, TOTAL_SUPPLY_KEY_NAME,
+    NAME_KEY_NAME, SYMBOL_KEY_NAME, TOTAL_SUPPLY_KEY_NAME, STAKEHOLDERS_KEY_NAME, STAKES_KEY_NAME,
+    REWARDS_KEY_NAME,
 };
 pub use error::Error;
 
@@ -47,14 +50,25 @@ pub struct ERC20 {
     balances_uref: OnceCell<URef>,
     allowances_uref: OnceCell<URef>,
     total_supply_uref: OnceCell<URef>,
+    stakeholders_uref: OnceCell<URef>,
+    stakes_uref: OnceCell<URef>,
+    rewards_uref: OnceCell<URef>,
 }
 
+//    stakeholders_uref: URef,
+//stakes_uref: URef,
+//rewards_uref: URef,
+
 impl ERC20 {
-    fn new(balances_uref: URef, allowances_uref: URef, total_supply_uref: URef) -> Self {
+    fn new(balances_uref: URef, allowances_uref: URef, total_supply_uref: URef,
+    stakeholders_uref: URef, stakes_uref: URef, rewards_uref: URef) -> Self {
         Self {
             balances_uref: balances_uref.into(),
             allowances_uref: allowances_uref.into(),
             total_supply_uref: total_supply_uref.into(),
+            stakeholders_uref: stakeholders_uref.into(),
+            stakes_uref: stakes_uref.into(),
+            rewards_uref: rewards_uref.into()
         }
     }
 
@@ -107,6 +121,27 @@ impl ERC20 {
         balances::transfer_balance(self.balances_uref(), sender, recipient, amount)
     }
 
+    /// Staking 
+
+    fn stakeholders_uref(&self) -> URef {
+        *self
+            .stakeholders_uref
+            .get_or_init(stakes::stakeholders_uref)
+    }
+
+    fn stakes_uref(&self) -> URef {
+        *self
+            .stakes_uref
+            .get_or_init(stakes::stakes_uref)
+    }
+
+    fn rewards_uref(&self) -> URef {
+        *self
+            .rewards_uref
+            .get_or_init(stakes::rewards_uref)
+    }
+
+    ///
     /// Installs the ERC20 contract with the default set of entry points.
     ///
     /// This should be called from within `fn call()` of your contract.
@@ -234,25 +269,16 @@ impl ERC20 {
         Ok(())
     }
 
-    /// Creates stake of for an account.
+    /// Creates stake for an account. This effectively freezes the tokens.
+    /// If the account does not have stakes yet, add it to stakeholders list.
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
     pub fn create_stake(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
-        let new_balance = {
-            let balance = self.read_balance(owner);
-            balance
-                .checked_sub(amount)
-                .ok_or(Error::InsufficientBalance)?
-        };
-        let new_total_supply = {
-            let total_supply = self.read_total_supply();
-            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
-        };
-        self.write_balance(owner, new_balance);
-        self.write_total_supply(new_total_supply);
+        let balance = self.read_balance(owner);
+        
         Ok(())
     }
 
@@ -518,6 +544,10 @@ impl ERC20 {
         // We need to hold on a RW access rights because tokens can be minted or burned.
         let total_supply_uref = storage::new_uref(initial_supply).into_read_write();
 
+        let stakeholders_uref = storage::new_dictionary(STAKEHOLDERS_KEY_NAME).unwrap_or_revert();
+        let stakes_uref = storage::new_dictionary(STAKES_KEY_NAME).unwrap_or_revert();
+        let rewards_uref = storage::new_dictionary(REWARDS_KEY_NAME).unwrap_or_revert();
+
         let mut named_keys = NamedKeys::new();
 
         let name_key = {
@@ -553,11 +583,33 @@ impl ERC20 {
             Key::from(allowances_uref)
         };
 
+        let stakeholders_dictionary_key = {
+            runtime::remove_key(STAKEHOLDERS_KEY_NAME);
+
+            Key::from(allowances_uref)
+        };
+
+        let stakes_dictionary_key = {
+            runtime::remove_key(STAKES_KEY_NAME);
+
+            Key::from(allowances_uref)
+        };
+
+        let rewards_dictionary_key = {
+            runtime::remove_key(REWARDS_KEY_NAME);
+
+            Key::from(allowances_uref)
+        };
+
         named_keys.insert(NAME_KEY_NAME.to_string(), name_key);
         named_keys.insert(SYMBOL_KEY_NAME.to_string(), symbol_key);
         named_keys.insert(DECIMALS_KEY_NAME.to_string(), decimals_key);
         named_keys.insert(BALANCES_KEY_NAME.to_string(), balances_dictionary_key);
         named_keys.insert(ALLOWANCES_KEY_NAME.to_string(), allowances_dictionary_key);
+        named_keys.insert(STAKEHOLDERS_KEY_NAME.to_string(), stakeholders_dictionary_key);
+        named_keys.insert(STAKES_KEY_NAME.to_string(), stakes_dictionary_key);
+        named_keys.insert(REWARDS_KEY_NAME.to_string(), rewards_dictionary_key);
+
         named_keys.insert(TOTAL_SUPPLY_KEY_NAME.to_string(), total_supply_key);
 
         let (contract_hash, _version) =
@@ -570,6 +622,9 @@ impl ERC20 {
             balances_uref,
             allowances_uref,
             total_supply_uref,
+            stakeholders_uref,
+            stakes_uref,
+            rewards_uref,
         ))
     }
 }

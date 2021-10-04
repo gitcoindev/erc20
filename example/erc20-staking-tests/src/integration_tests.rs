@@ -13,9 +13,18 @@ mod tests {
         assert_eq!(fixture.token_name(), TestFixture::TOKEN_NAME);
         assert_eq!(fixture.token_symbol(), TestFixture::TOKEN_SYMBOL);
         assert_eq!(fixture.token_decimals(), TestFixture::TOKEN_DECIMALS);
+        println!("{} {} {}", fixture.token_name(), fixture.token_symbol(), fixture.token_decimals());
         assert_eq!(
             fixture.balance_of(Key::from(fixture.ali)),
             Some(TestFixture::token_total_supply())
+        );
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.bob)),
+            None
+        );
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.joe)),
+            None
         );
     }
 
@@ -58,6 +67,22 @@ mod tests {
         );
     }
 
+
+    #[test]
+    fn should_create_stake() {
+        let mut fixture = TestFixture::install_contract();
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+        assert_eq!(fixture.balance_of(Key::from(fixture.bob)), None);
+        
+        let stake_amount_1 = U256::from(1);
+        
+        
+    }
+
     #[test]
     fn should_transfer_full_amount() {
         let mut fixture = TestFixture::install_contract();
@@ -76,7 +101,8 @@ mod tests {
             fixture.balance_of(Key::from(fixture.bob)),
             Some(initial_ali_balance)
         );
-        // println!("ali {} bob {:?}", initial_ali_balance, fixture);
+        println!("ali {}", initial_ali_balance);
+        println!("bob received {:?}", fixture.balance_of(Key::from(fixture.bob)));
 
         assert_eq!(
             fixture.balance_of(Key::from(fixture.ali)),
@@ -97,6 +123,11 @@ mod tests {
             fixture.balance_of(Key::from(fixture.ali)),
             Some(initial_ali_balance)
         );
+
+        fixture.create_stake(
+            Key::from(fixture.bob), 
+            initial_ali_balance, 
+            Sender(fixture.bob))
     }
 
     #[should_panic(expected = "ApiError::User(65534) [131070]")]

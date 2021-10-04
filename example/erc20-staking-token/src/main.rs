@@ -6,7 +6,10 @@ compile_error!("target arch should be wasm32: compile with '--target wasm32-unkn
 
 extern crate alloc;
 
-use alloc::string::String;
+use alloc::{
+    string::String,
+    vec,
+};
 
 use casper_contract::{contract_api::runtime, unwrap_or_revert::UnwrapOrRevert};
 use casper_erc20::{
@@ -14,10 +17,34 @@ use casper_erc20::{
         ADDRESS_RUNTIME_ARG_NAME, AMOUNT_RUNTIME_ARG_NAME, DECIMALS_RUNTIME_ARG_NAME,
         NAME_RUNTIME_ARG_NAME, OWNER_RUNTIME_ARG_NAME, RECIPIENT_RUNTIME_ARG_NAME,
         SPENDER_RUNTIME_ARG_NAME, SYMBOL_RUNTIME_ARG_NAME, TOTAL_SUPPLY_RUNTIME_ARG_NAME,
+        ERC20_TOKEN_CONTRACT_KEY_NAME
     },
     Address, ERC20,
 };
-use casper_types::{CLValue, U256};
+use casper_types::{
+    CLType, CLTyped, CLValue, EntryPoint,
+    EntryPointAccess, EntryPointType, EntryPoints, Parameter, U256,
+};
+
+const STAKING_CONTRACT_KEY_NAME: &str = "erc20_token_contract";
+
+const MINT_ENTRY_POINT_NAME: &str = "mint";
+const BURN_ENTRY_POINT_NAME: &str = "burn";
+
+const CREATE_STAKE_ENTRY_POINT_NAME: &str = "create_stake";
+const REMOVE_STAKE_ENTRY_POINT_NAME: &str = "remove_stake";
+const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
+const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
+const IS_STAKEHOLDER_ENTRY_POINT_NAME: &str = "is_stakeholder";
+const ADD_STAKEHOLDER_ENTRY_POINT_NAME: &str = "add_stakeholder";
+const REMOVE_STAKEHOLDER_ENTRY_POINT_NAME: &str = "remove_stakeholder";
+const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
+const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
+const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
+const DISTRIBUTE_REWARDS_ENTRY_POINT_NAME: &str = "distribute_rewards";
+const WITHDRAW_REWARD_ENTRY_POINT_NAME: &str = "withdraw_reward";
+
+/* Default ERC20 entry points */
 
 #[no_mangle]
 pub extern "C" fn name() {
@@ -86,6 +113,133 @@ pub extern "C" fn transfer_from() {
         .unwrap_or_revert();
 }
 
+/* Mint / burn entry points */
+
+#[no_mangle]
+pub extern "C" fn mint() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default().mint(owner, amount).unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn burn() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default().burn(owner, amount).unwrap_or_revert();
+}
+
+/* Staking entry points */
+
+#[no_mangle]
+pub extern "C" fn create_stake() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .create_stake(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn remove_stake() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .remove_stake(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn stake_of() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .stake_of(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn total_stakes() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .total_stakes(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn is_stakeholder() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .is_stakeholder(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn add_stakeholder() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .add_stakeholder(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn remove_stakeholder() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .remove_stakeholder(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn rewards_of() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .rewards_of(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn total_rewards() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .total_rewards(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn calculate_rewards() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .calculate_rewards(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn distribute_rewards() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .distribute_rewards(owner, amount)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
+pub extern "C" fn withdraw_reward() {
+    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
+    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
+    ERC20::default()
+        .withdraw_reward(owner, amount)
+        .unwrap_or_revert();
+}
+
+
 #[no_mangle]
 fn call() {
     let name: String = runtime::get_named_arg(NAME_RUNTIME_ARG_NAME);
@@ -93,5 +247,198 @@ fn call() {
     let decimals = runtime::get_named_arg(DECIMALS_RUNTIME_ARG_NAME);
     let total_supply = runtime::get_named_arg(TOTAL_SUPPLY_RUNTIME_ARG_NAME);
 
-    let _token = ERC20::install(name, symbol, decimals, total_supply).unwrap_or_revert();
+    let mint_entrypoint = EntryPoint::new(
+        MINT_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let burn_entrypoint = EntryPoint::new(
+        BURN_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+
+    // Entry points related to staking
+    // create_stake_entrypoint
+    // remove_stake_entrypoint
+    // stake_of_entrypoint
+    // total_stakes_entrypoint
+    // is_stakeholder_entrypoint
+    // add_stakeholder_entrypoint
+    // remove_stakeholder_entrypoint
+    // rewards_of_entrypoint
+    // total_rewards_entrypoint
+    // calculate_rewards_entrypoint
+    // distribute_rewards_entrypoint
+    // withdraw_reward_entrypoint
+
+    let create_stake_entrypoint = EntryPoint::new(
+        CREATE_STAKE_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let remove_stake_entrypoint = EntryPoint::new(
+        REMOVE_STAKE_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let stake_of_entrypoint = EntryPoint::new(
+        STAKE_OF_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let total_stakes_entrypoint = EntryPoint::new(
+        TOTAL_STAKES_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let is_stakeholder_entrypoint = EntryPoint::new(
+        IS_STAKEHOLDER_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let add_stakeholder_entrypoint = EntryPoint::new(
+        ADD_STAKEHOLDER_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let remove_stakeholder_entrypoint = EntryPoint::new(
+        REMOVE_STAKEHOLDER_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let rewards_of_entrypoint = EntryPoint::new(
+        REWARDS_OF_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let total_rewards_entrypoint = EntryPoint::new(
+        TOTAL_REWARDS_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let calculate_rewards_entrypoint = EntryPoint::new(
+        CALCULATE_REWARDS_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let distribute_rewards_entrypoint = EntryPoint::new(
+        DISTRIBUTE_REWARDS_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+    let withdraw_reward_entrypoint = EntryPoint::new(
+        WITHDRAW_REWARD_ENTRY_POINT_NAME,
+        vec![
+            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
+            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
+        ],
+        CLType::Unit,
+        // NOTE: For security reasons never use this entrypoint definition in a production
+        // contract. This is marks the entry point as public.
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    );
+
+    let mut entry_points = casper_erc20::entry_points::default();
+
+    entry_points.add_entry_point(mint_entrypoint);
+    entry_points.add_entry_point(burn_entrypoint);
+
+    entry_points.add_entry_point(create_stake_entrypoint);
+    entry_points.add_entry_point(remove_stake_entrypoint);
+    entry_points.add_entry_point(stake_of_entrypoint);
+    entry_points.add_entry_point(total_stakes_entrypoint);
+    entry_points.add_entry_point(is_stakeholder_entrypoint);
+    entry_points.add_entry_point(add_stakeholder_entrypoint);
+    entry_points.add_entry_point(remove_stakeholder_entrypoint);
+    entry_points.add_entry_point(rewards_of_entrypoint);
+    entry_points.add_entry_point(total_rewards_entrypoint);
+    entry_points.add_entry_point(calculate_rewards_entrypoint);
+    entry_points.add_entry_point(distribute_rewards_entrypoint);
+    entry_points.add_entry_point(withdraw_reward_entrypoint);
+    
+    let _token = ERC20::install_custom(
+        name,
+        symbol,
+        decimals,
+        total_supply,
+        ERC20_TOKEN_CONTRACT_KEY_NAME,
+        entry_points,
+    ).unwrap_or_revert();
 }

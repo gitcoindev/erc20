@@ -10,8 +10,22 @@ use casper_types::{
     runtime_args, AsymmetricType, CLTyped, ContractHash, Key, PublicKey, RuntimeArgs, U256, U512,
 };
 
-const CONTRACT_ERC20_TOKEN: &str = "erc20_token.wasm";
+const CONTRACT_ERC20_TOKEN: &str = "erc20_staking_token.wasm";
 const CONTRACT_KEY_NAME: &str = "erc20_token_contract";
+
+const CREATE_STAKE_ENTRY_POINT_NAME: &str = "create_stake";
+const REMOVE_STAKE_ENTRY_POINT_NAME: &str = "remove_stake";
+const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
+const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
+const IS_STAKEHOLDER_ENTRY_POINT_NAME: &str = "is_stakeholder";
+const ADD_STAKEHOLDER_ENTRY_POINT_NAME: &str = "add_stakeholder";
+const REMOVE_STAKEHOLDER_ENTRY_POINT_NAME: &str = "remove_stakeholder";
+const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
+const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
+const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
+const DISTRIBUTE_REWARDS_ENTRY_POINT_NAME: &str = "distribute_rewards";
+const WITHDRAW_REWARD_ENTRY_POINT_NAME: &str = "withdraw_reward";
+
 
 fn blake2b256(item_key_string: &[u8]) -> Box<[u8]> {
     let mut hasher = VarBlake2b::new(32).unwrap();
@@ -31,7 +45,7 @@ pub struct TestFixture {
 
 impl TestFixture {
     pub const TOKEN_NAME: &'static str = "Test ERC20";
-    pub const TOKEN_SYMBOL: &'static str = "TERC";
+    pub const TOKEN_SYMBOL: &'static str = "TERC20";
     pub const TOKEN_DECIMALS: u8 = 8;
     const TOKEN_TOTAL_SUPPLY_AS_U64: u64 = 1000;
 
@@ -185,6 +199,17 @@ impl TestFixture {
             runtime_args! {
                 consts::OWNER_RUNTIME_ARG_NAME => owner,
                 consts::RECIPIENT_RUNTIME_ARG_NAME => recipient,
+                consts::AMOUNT_RUNTIME_ARG_NAME => amount
+            },
+        );
+    }
+
+    pub fn create_stake(&mut self, owner: Key, amount: U256, sender: Sender) {
+        self.call(
+            sender,
+            CREATE_STAKE_ENTRY_POINT_NAME,
+            runtime_args! {
+                consts::OWNER_RUNTIME_ARG_NAME => owner,
                 consts::AMOUNT_RUNTIME_ARG_NAME => amount
             },
         );
