@@ -26,7 +26,8 @@ mod total_supply;
 mod stakes;
 
 use alloc::string::{String, ToString};
-// use alloc::collections::{BTreeSet, BTreeMap};
+use alloc::collections::{BTreeSet, BTreeMap};
+use alloc::vec::Vec;
 
 use once_cell::unsync::OnceCell;
 
@@ -139,6 +140,22 @@ impl ERC20 {
         *self
             .rewards_uref
             .get_or_init(stakes::rewards_uref)
+    }
+
+    fn read_stakolders(&self) -> Vec<Address> {
+        stakes::read_stakeholders_from(self.stakeholders_uref())
+    }
+
+    fn read_stakes(&self) -> BTreeMap<Address, U256> {
+        stakes::read_stakes_from(self.stakes_uref())
+    }
+
+    fn read_stake(&self, owner: Address) -> U256 {
+        stakes::read_stake_from(self.stakes_uref(), owner)
+    }
+
+    fn read_rewards(&self) -> BTreeMap<Address, U256> {
+        stakes::read_rewards_from(self.rewards_uref())
     }
 
     ///
@@ -586,19 +603,19 @@ impl ERC20 {
         let stakeholders_dictionary_key = {
             runtime::remove_key(STAKEHOLDERS_KEY_NAME);
 
-            Key::from(allowances_uref)
+            Key::from(stakeholders_uref)
         };
 
         let stakes_dictionary_key = {
             runtime::remove_key(STAKES_KEY_NAME);
 
-            Key::from(allowances_uref)
+            Key::from(stakes_uref)
         };
 
         let rewards_dictionary_key = {
             runtime::remove_key(REWARDS_KEY_NAME);
 
-            Key::from(allowances_uref)
+            Key::from(rewards_uref)
         };
 
         named_keys.insert(NAME_KEY_NAME.to_string(), name_key);

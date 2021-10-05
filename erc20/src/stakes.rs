@@ -1,5 +1,5 @@
 //! Implementation of stakes.
-use alloc::{string::String, vec::Vec};
+use alloc::{collections::BTreeMap, collections::BTreeSet, string::String, vec::Vec};
 
 use casper_contract::{
     contract_api::{runtime, storage},
@@ -25,31 +25,50 @@ pub(crate) fn rewards_uref() -> URef {
     detail::get_uref(REWARDS_KEY_NAME)
 }
 
-/// Creates a dictionary item key for an (owner, spender) pair.
-fn make_dictionary_item_key(owner: Address, spender: Address) -> String {
-    let mut preimage = Vec::new();
-    preimage.append(&mut owner.to_bytes().unwrap_or_revert());
-    preimage.append(&mut spender.to_bytes().unwrap_or_revert());
+#[inline]
+fn make_dictionary_item_key(owner: Address) -> String {
+    let preimage = owner.to_bytes().unwrap_or_revert();
 
-    let key_bytes = runtime::blake2b(&preimage);
-    hex::encode(&key_bytes)
+    base64::encode(&preimage)
 }
 
 /// Writes an stake for owner for a specific amount.
 pub(crate) fn write_stake_to(
     stakes_uref: URef,
     owner: Address,
-    spender: Address,
     amount: U256,
 ) {
-    let dictionary_item_key = make_dictionary_item_key(owner, spender);
+    let dictionary_item_key = make_dictionary_item_key(owner);
     storage::dictionary_put(stakes_uref, &dictionary_item_key, amount)
 }
 
 /// Reads an stake for a owner
-pub(crate) fn read_stake_from(stakes_uref: URef, owner: Address, spender: Address) -> U256 {
-    let dictionary_item_key = make_dictionary_item_key(owner, spender);
+pub(crate) fn read_stake_from(stakes_uref: URef, owner: Address) -> U256 {
+    let dictionary_item_key = make_dictionary_item_key(owner);
     storage::dictionary_get(stakes_uref, &dictionary_item_key)
         .unwrap_or_revert()
         .unwrap_or_default()
+}
+
+/// Reads stakes for all owners
+pub(crate) fn read_stakes_from(stakes_uref: URef) -> BTreeMap<Address, U256> {
+    storage::read_or_revert(stakes_uref)
+}
+
+/// Reads a reward for a owner
+pub(crate) fn read_reward_from(rewards_uref: URef, owner: Address) -> U256 {
+    let dictionary_item_key = make_dictionary_item_key(owner);
+    storage::dictionary_get(rewards_uref, &dictionary_item_key)
+        .unwrap_or_revert()
+        .unwrap_or_default()
+}
+
+/// Reads rewards for all owners
+pub(crate) fn read_rewards_from(rewards_uref: URef) -> BTreeMap<Address, U256> {
+    storage::read_or_revert(rewards_uref)
+}
+
+/// Reads stakeholders
+pub(crate) fn read_stakeholders_from(stakeholders_uref: URef) -> Vec<Address> {
+    storage::read_or_revert(stakeholders_uref)
 }
