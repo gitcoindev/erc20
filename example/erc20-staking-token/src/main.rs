@@ -152,9 +152,8 @@ pub extern "C" fn remove_stake() {
 #[no_mangle]
 pub extern "C" fn stake_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .stake_of(owner, amount)
+        .stake_of(owner)
         .unwrap_or_revert();
 }
 
@@ -170,54 +169,48 @@ pub extern "C" fn total_stakes() {
 #[no_mangle]
 pub extern "C" fn is_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .is_stakeholder(owner, amount)
+        .is_stakeholder(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn add_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .add_stakeholder(owner, amount)
+        .add_stakeholder(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn remove_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .remove_stakeholder(owner, amount)
+        .remove_stakeholder(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn rewards_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .rewards_of(owner, amount)
+        .rewards_of(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn total_rewards() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .total_rewards(owner, amount)
+        .total_rewards(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn calculate_rewards() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .calculate_rewards(owner, amount)
+        .calculate_rewards(owner)
         .unwrap_or_revert();
 }
 

@@ -341,8 +341,7 @@ pub extern "C" fn remove_stake() {
 #[no_mangle]
 pub extern "C" fn stake_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().stake_of(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().stake_of(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
@@ -355,43 +354,37 @@ pub extern "C" fn total_stakes() {
 #[no_mangle]
 pub extern "C" fn is_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().is_stakeholder(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().is_stakeholder(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn add_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().add_stakeholder(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().add_stakeholder(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn remove_stakeholder() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().remove_stakeholder(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().remove_stakeholder(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn rewards_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().rewards_of(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().rewards_of(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn total_rewards() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().total_rewards(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().total_rewards(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn calculate_rewards() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().calculate_rewards(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().calculate_rewards(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
