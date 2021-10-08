@@ -139,17 +139,17 @@ pub extern "C" fn burn() {
 }
 
     /**
-     * @notice We usually require to know who are all the stakeholders.
+     * @notice We usually require to know who are all the stakers.
      */
-    //address[] internal stakeholders;
+    //address[] internal stakers;
 
     /**
-     * @notice The stakes for each stakeholder.
+     * @notice The stakes for each staker.
      */
     //mapping(address => uint256) internal stakes;
 
     /**
-     * @notice The accumulated rewards for each stakeholder.
+     * @notice The accumulated rewards for each staker.
      */
     //mapping(address => uint256) internal rewards;
 

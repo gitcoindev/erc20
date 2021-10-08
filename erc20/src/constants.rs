@@ -16,11 +16,11 @@ pub const ALLOWANCES_KEY_NAME: &str = "allowances";
 pub const TOTAL_SUPPLY_KEY_NAME: &str = "total_supply";
 
 //////////// stakes
-/// Name of dictionary-key for `stakeholders`
-pub const STAKEHOLDERS_KEY_NAME: &str = "stakeholders";
+/// Name of dictionary-key for `stakers`
+pub const STAKERS_KEY_NAME: &str = "stakers";
 /// Name of dictionary-key for `stakes`
 pub const STAKES_KEY_NAME: &str = "stakes";
-/// Name of named-key for `rewards`
+/// Name of dictionary-key `rewards`
 pub const REWARDS_KEY_NAME: &str = "rewards";
 
 

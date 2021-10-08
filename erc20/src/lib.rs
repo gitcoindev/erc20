@@ -26,7 +26,7 @@ mod total_supply;
 mod stakes;
 
 use alloc::string::{String, ToString};
-use alloc::collections::{BTreeSet, BTreeMap};
+use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use once_cell::unsync::OnceCell;
@@ -40,10 +40,12 @@ use casper_types::{contracts::NamedKeys, EntryPoints, Key, URef, U256};
 pub use address::Address;
 use constants::{
     ALLOWANCES_KEY_NAME, BALANCES_KEY_NAME, DECIMALS_KEY_NAME, ERC20_TOKEN_CONTRACT_KEY_NAME,
-    NAME_KEY_NAME, SYMBOL_KEY_NAME, TOTAL_SUPPLY_KEY_NAME, STAKEHOLDERS_KEY_NAME, STAKES_KEY_NAME,
+    NAME_KEY_NAME, SYMBOL_KEY_NAME, TOTAL_SUPPLY_KEY_NAME, STAKERS_KEY_NAME, STAKES_KEY_NAME,
     REWARDS_KEY_NAME,
 };
 pub use error::Error;
+use stakes::add_staker;
+use crate::balances::{read_balance_from, write_balance_to};
 
 /// Implementation of ERC20 standard functionality.
 #[derive(Default)]
@@ -51,7 +53,7 @@ pub struct ERC20 {
     balances_uref: OnceCell<URef>,
     allowances_uref: OnceCell<URef>,
     total_supply_uref: OnceCell<URef>,
-    stakeholders_uref: OnceCell<URef>,
+    stakers_uref: OnceCell<URef>,
     stakes_uref: OnceCell<URef>,
     rewards_uref: OnceCell<URef>,
 }
@@ -59,12 +61,12 @@ pub struct ERC20 {
 
 impl ERC20 {
     fn new(balances_uref: URef, allowances_uref: URef, total_supply_uref: URef,
-    stakeholders_uref: URef, stakes_uref: URef, rewards_uref: URef) -> Self {
+    stakers_uref: URef, stakes_uref: URef, rewards_uref: URef) -> Self {
         Self {
             balances_uref: balances_uref.into(),
             allowances_uref: allowances_uref.into(),
             total_supply_uref: total_supply_uref.into(),
-            stakeholders_uref: stakeholders_uref.into(),
+            stakers_uref: stakers_uref.into(),
             stakes_uref: stakes_uref.into(),
             rewards_uref: rewards_uref.into()
         }
@@ -121,10 +123,10 @@ impl ERC20 {
 
     /// Staking 
 
-    fn stakeholders_uref(&self) -> URef {
+    fn stakers_uref(&self) -> URef {
         *self
-            .stakeholders_uref
-            .get_or_init(stakes::stakeholders_uref)
+            .stakers_uref
+            .get_or_init(stakes::stakers_uref)
     }
 
     fn stakes_uref(&self) -> URef {
@@ -139,8 +141,8 @@ impl ERC20 {
             .get_or_init(stakes::rewards_uref)
     }
 
-    fn read_stakolders(&self) -> Vec<Address> {
-        stakes::read_stakeholders_from(self.stakeholders_uref())
+    fn read_stakers(&self) -> Vec<Address> {
+        stakes::read_stakers_from(self.stakers_uref())
     }
 
     fn read_stakes(&self) -> BTreeMap<Address, U256> {
@@ -283,36 +285,51 @@ impl ERC20 {
         Ok(())
     }
 
-    /// Creates stake for an account. This effectively freezes the tokens.
-    /// If the account does not have stakes yet, add it to stakeholders list.
-    ///
-    /// # Security
-    ///
-    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
-    /// public entry point.
+    /// Creates stake for an account.
     pub fn create_stake(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
-        let balance = self.read_balance(owner);
-        
+         let new_owner_balance = {
+            let owner_balance = read_balance_from(self.balances_uref(), owner);
+            owner_balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
+
+        let new_stake_balance = {
+            let stake_balance = read_balance_from(self.stakes_uref(), owner);
+            stake_balance
+                .checked_add(amount)
+                .ok_or(Error::Overflow)?
+        };
+
+        add_staker(self.stakers_uref(), owner);
+        write_balance_to(self.balances_uref(), owner, new_owner_balance);
+        write_balance_to(self.stakes_uref(), owner, new_stake_balance);
+
         Ok(())
     }
 
     /// Removes stake of an account.
-    ///
-    /// # Security
-    ///
-    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
-    /// public entry point.
     pub fn remove_stake(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+        let new_stake_balance = {
+            let stake_balance = read_balance_from(self.stakes_uref(), owner);
+            stake_balance
+                .checked_sub(amount)
+                .ok_or(Error::InsufficientBalance)?
+        };
 
+        let new_owner_balance = {
+            let owner_balance = read_balance_from(self.balances_uref(), owner);
+            owner_balance
+                .checked_add(amount)
+                .ok_or(Error::Overflow)?
+        };
+
+        write_balance_to(self.balances_uref(), owner, new_owner_balance);
+        write_balance_to(self.stakes_uref(), owner, new_stake_balance);
         Ok(())
     }
 
     /// Returns stake of an account.
-    ///
-    /// # Security
-    ///
-    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
-    /// public entry point.
     pub fn stake_of(&mut self, owner: Address) -> Result<U256, Error> {
         let stakes: BTreeMap<Address, U256> = self.read_stakes();
 
@@ -320,35 +337,23 @@ impl ERC20 {
     }
 
     /// Returns total amount staked.
-    ///
-    /// # Security
-    ///
-    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
-    /// public entry point.
-    pub fn total_stakes(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
-        let new_balance = {
-            let balance = self.read_balance(owner);
-            balance
-                .checked_sub(amount)
-                .ok_or(Error::InsufficientBalance)?
-        };
-        let new_total_supply = {
-            let total_supply = self.read_total_supply();
-            total_supply.checked_sub(amount).ok_or(Error::Overflow)?
-        };
-        self.write_balance(owner, new_balance);
-        self.write_total_supply(new_total_supply);
-        Ok(())
+    pub fn total_stakes(&mut self) -> Result<U256, Error> {
+        let mut amount: U256 = U256::zero();
+
+        //for s in stakes::read_stakes_from(self.stakes_uref()) {
+        //    amount += s.1;
+        //}
+        Ok(amount)
     }
 
-    /// Returns true if is a stakeholder, false otherwise.
+    /// Returns true if is a staker, false otherwise.
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn is_stakeholder(&mut self, owner: Address) -> Result<bool, Error> {
-        for s in self.read_stakolders() {
+    pub fn is_staker(&mut self, owner: Address) -> Result<bool, Error> {
+        for s in self.read_stakers() {
             if s == owner {
                 return Ok(true)
             }
@@ -357,37 +362,38 @@ impl ERC20 {
         Ok(false)
     }
 
-    /// Adds a stakeholder.
+    /// Adds a staker.
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn add_stakeholder(&mut self, owner: Address) -> Result<(), Error> {
+    pub fn add_staker(&mut self, owner: Address) -> Result<(), Error> {
+        stakes::add_staker(self.stakers_uref(), owner);
 
         Ok(())
     }
 
-    /// Removes stakeholder.
+    /// Removes staker
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn remove_stakeholder(&mut self, owner: Address) -> Result<(), Error> {
+    pub fn remove_staker(&mut self, owner: Address) -> Result<(), Error> {
 
         Ok(())
     }
 
-    /// Returns rewards of a stakeholder.
+    /// Returns rewards of a staker.
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn rewards_of(&mut self, owner: Address) -> Result<(), Error> {
-
-        Ok(())
+    pub fn rewards_of(&mut self, owner: Address) -> Result<U256, Error> {
+        
+        Ok(stakes::read_reward_from(self.rewards_uref(), owner))
     }
 
     /// Returns total amount of rewards.
@@ -401,7 +407,7 @@ impl ERC20 {
         Ok(())
     }
 
-    /// Calculates reward for a stakeholder.
+    /// Calculates reward for a staker.
     ///
     /// # Security
     ///
@@ -412,7 +418,7 @@ impl ERC20 {
         Ok(())
     }
 
-    /// Distribute rewards to all stakeholders
+    /// Distribute rewards to all stakers
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
@@ -454,7 +460,7 @@ impl ERC20 {
         // We need to hold on a RW access rights because tokens can be minted or burned.
         let total_supply_uref = storage::new_uref(initial_supply).into_read_write();
 
-        let stakeholders_uref = storage::new_uref(STAKEHOLDERS_KEY_NAME).into_read_write();
+        let stakers_uref = storage::new_dictionary(STAKERS_KEY_NAME).unwrap_or_revert();
         let stakes_uref = storage::new_dictionary(STAKES_KEY_NAME).unwrap_or_revert();
         let rewards_uref = storage::new_dictionary(REWARDS_KEY_NAME).unwrap_or_revert();
 
@@ -493,10 +499,10 @@ impl ERC20 {
             Key::from(allowances_uref)
         };
 
-        let stakeholders_dictionary_key = {
-            runtime::remove_key(STAKEHOLDERS_KEY_NAME);
+        let stakers_dictionary_key = {
+            runtime::remove_key(STAKERS_KEY_NAME);
 
-            Key::from(stakeholders_uref)
+            Key::from(stakers_uref)
         };
 
         let stakes_dictionary_key = {
@@ -516,7 +522,7 @@ impl ERC20 {
         named_keys.insert(DECIMALS_KEY_NAME.to_string(), decimals_key);
         named_keys.insert(BALANCES_KEY_NAME.to_string(), balances_dictionary_key);
         named_keys.insert(ALLOWANCES_KEY_NAME.to_string(), allowances_dictionary_key);
-        named_keys.insert(STAKEHOLDERS_KEY_NAME.to_string(), stakeholders_dictionary_key);
+        named_keys.insert(STAKERS_KEY_NAME.to_string(), stakers_dictionary_key);
         named_keys.insert(STAKES_KEY_NAME.to_string(), stakes_dictionary_key);
         named_keys.insert(REWARDS_KEY_NAME.to_string(), rewards_dictionary_key);
 
@@ -532,7 +538,7 @@ impl ERC20 {
             balances_uref,
             allowances_uref,
             total_supply_uref,
-            stakeholders_uref,
+            stakers_uref,
             stakes_uref,
             rewards_uref,
         ))

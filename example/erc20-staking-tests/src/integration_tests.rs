@@ -3,6 +3,8 @@ mod test_fixture;
 
 #[cfg(test)]
 mod tests {
+    use std::ops::{Add, Mul};
+
     use casper_types::{Key, U256};
 
     use crate::test_fixture::{Sender, TestFixture};
@@ -80,7 +82,224 @@ mod tests {
         
         let stake_amount_1 = U256::from(1);
         
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1, 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)), 
+            Some(TestFixture::token_total_supply() - stake_amount_1)
+        );
         
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_1)
+        )
+    }
+
+    #[test]
+    fn should_create_and_remove_stake() {
+        let mut fixture = TestFixture::install_contract();
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+        assert_eq!(fixture.balance_of(Key::from(fixture.bob)), None);
+        
+        let stake_amount_1 = U256::from(1);
+        
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1, 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)), 
+            Some(TestFixture::token_total_supply() - stake_amount_1)
+        );
+
+        fixture.remove_stake(
+                Key::from(fixture.ali), 
+                stake_amount_1, 
+                Sender(fixture.ali));
+        
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(U256::zero())
+        )
+    }
+
+    #[test]
+    fn should_add_to_stake() {
+        let mut fixture = TestFixture::install_contract();
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+        assert_eq!(fixture.balance_of(Key::from(fixture.bob)), None);
+        
+        let stake_amount_1 = U256::from(1);
+        
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1, 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)), 
+            Some(TestFixture::token_total_supply() - stake_amount_1)
+        );
+        
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_1)
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1.mul(10), 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)), 
+            Some(TestFixture::token_total_supply() - stake_amount_1.mul(11))
+        );
+        
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_1.mul(11))
+        );
+    
+    }
+
+    #[should_panic(expected = "ApiError::User(65534) [131070]")]
+    #[test]
+    fn should_fail_to_stake_if_balance_not_enough() {
+        let mut fixture = TestFixture::install_contract();
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+        assert_eq!(fixture.balance_of(Key::from(fixture.bob)), None);
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            TestFixture::token_total_supply().add(1), 
+            Sender(fixture.ali));
+    }
+
+    #[test]
+    fn should_stake_full_amount_from_two_accounts() {
+        let mut fixture = TestFixture::install_contract();
+        let stake_amount_1 = U256::from(1);
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+
+        fixture.transfer(
+            Key::from(fixture.bob),
+            TestFixture::token_total_supply() - stake_amount_1.mul(3),
+            Sender(fixture.ali),
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1.mul(3), 
+            Sender(fixture.ali));
+
+        fixture.create_stake(
+            Key::from(fixture.bob), 
+            TestFixture::token_total_supply() - stake_amount_1.mul(3), 
+            Sender(fixture.bob));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)), 
+            Some(U256::zero())
+        );
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.bob)), 
+            Some(U256::zero())
+        );
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_1.mul(3))
+        );
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.bob)),
+            Some(TestFixture::token_total_supply() - stake_amount_1.mul(3))
+        );
+
+        assert_eq!(
+            fixture.total_stakes(),
+            Some(TestFixture::token_total_supply())
+        )
+    }
+
+    #[test]
+    fn should_store_total_stakes() {
+        let mut fixture = TestFixture::install_contract();
+        let stake_amount_1 = U256::from(1);
+        let stake_amount_100 = U256::from(100);
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+
+        fixture.transfer(
+            Key::from(fixture.bob),
+            stake_amount_100,
+            Sender(fixture.ali),
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_1, 
+            Sender(fixture.ali));
+
+        fixture.create_stake(
+            Key::from(fixture.bob), 
+            stake_amount_100, 
+            Sender(fixture.bob));
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_1)
+        );
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.bob)),
+            Some(stake_amount_100)
+        );
+
+        assert_eq!(
+            fixture.total_stakes(),
+            Some(U256::from(101))
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_100, 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.total_stakes(),
+            Some(U256::from(201))
+        );
     }
 
     #[test]
@@ -123,11 +342,6 @@ mod tests {
             fixture.balance_of(Key::from(fixture.ali)),
             Some(initial_ali_balance)
         );
-
-        fixture.create_stake(
-            Key::from(fixture.bob), 
-            initial_ali_balance, 
-            Sender(fixture.bob))
     }
 
     #[should_panic(expected = "ApiError::User(65534) [131070]")]

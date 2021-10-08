@@ -1,9 +1,13 @@
+use std::{collections::BTreeMap, ops::Add};
+
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
-use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder};
+use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder, Value, Error};
 use casper_erc20::constants as consts;
+use casper_erc20::Address;
+
 use casper_types::{
     account::AccountHash,
     bytesrepr::{FromBytes, ToBytes},
@@ -17,9 +21,9 @@ const CREATE_STAKE_ENTRY_POINT_NAME: &str = "create_stake";
 const REMOVE_STAKE_ENTRY_POINT_NAME: &str = "remove_stake";
 const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
 const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
-const IS_STAKEHOLDER_ENTRY_POINT_NAME: &str = "is_stakeholder";
-const ADD_STAKEHOLDER_ENTRY_POINT_NAME: &str = "add_stakeholder";
-const REMOVE_STAKEHOLDER_ENTRY_POINT_NAME: &str = "remove_stakeholder";
+const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
+const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
+const REMOVE_STAKER_ENTRY_POINT_NAME: &str = "remove_staker";
 const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
 const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
 const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
@@ -213,5 +217,58 @@ impl TestFixture {
                 consts::AMOUNT_RUNTIME_ARG_NAME => amount
             },
         );
+    }
+
+    pub fn remove_stake(&mut self, owner: Key, amount: U256, sender: Sender) {
+        self.call(
+            sender,
+            REMOVE_STAKE_ENTRY_POINT_NAME,
+            runtime_args! {
+                consts::OWNER_RUNTIME_ARG_NAME => owner,
+                consts::AMOUNT_RUNTIME_ARG_NAME => amount
+            },
+        );
+    }
+
+    pub fn stake_of(&mut self, account: Key) -> Option<U256> {
+        let item_key = base64::encode(&account.to_bytes().unwrap());
+
+        let key = Key::Hash(self.contract_hash().value());
+        let value = self
+            .context
+            .query_dictionary_item(key, Some(consts::STAKES_KEY_NAME.to_string()), item_key)
+            .ok()?;
+
+        Some(value.into_t::<U256>().unwrap())
+    }
+
+    pub fn total_stakes(&mut self) -> Option<U256> {
+        let key = Key::Hash(self.contract_hash().value());
+
+        let stakers = self
+            .context
+            .query_dictionary_item(
+                key, Some(consts::STAKERS_KEY_NAME.to_string()), 
+                consts::STAKERS_KEY_NAME.to_string()
+            )
+            .ok()?;
+
+        let mut sum: U256 = U256::zero();
+
+        for s in stakers.into_t::<Vec<Address>>().unwrap() {
+            let preimage = s.to_bytes().unwrap();
+            let dictionary_item_key = base64::encode(&preimage);
+            let stake_of = self
+            .context
+            .query_dictionary_item(
+                key, 
+                Some(consts::STAKES_KEY_NAME.to_string()), dictionary_item_key
+            )
+            .ok()?;
+
+            sum += stake_of.into_t::<U256>().unwrap();
+        }
+
+        Some(sum)
     }
 }

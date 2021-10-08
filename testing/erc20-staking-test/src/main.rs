@@ -26,9 +26,9 @@ const CREATE_STAKE_ENTRY_POINT_NAME: &str = "create_stake";
 const REMOVE_STAKE_ENTRY_POINT_NAME: &str = "remove_stake";
 const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
 const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
-const IS_STAKEHOLDER_ENTRY_POINT_NAME: &str = "is_stakeholder";
-const ADD_STAKEHOLDER_ENTRY_POINT_NAME: &str = "add_stakeholder";
-const REMOVE_STAKEHOLDER_ENTRY_POINT_NAME: &str = "remove_stakeholder";
+const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
+const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
+const REMOVE_STAKER_ENTRY_POINT_NAME: &str = "remove_staker";
 const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
 const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
 const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
@@ -93,9 +93,9 @@ impl TestStakingToken {
         // remove_stake_entrypoint
         // stake_of_entrypoint
         // total_stakes_entrypoint
-        // is_stakeholder_entrypoint
-        // add_stakeholder_entrypoint
-        // remove_stakeholder_entrypoint
+        // is_staker_entrypoint
+        // add_staker_entrypoint
+        // remove_staker_entrypoint
         // rewards_of_entrypoint
         // total_rewards_entrypoint
         // calculate_rewards_entrypoint
@@ -151,8 +151,8 @@ impl TestStakingToken {
             EntryPointAccess::Public,
             EntryPointType::Contract,
         );
-        let is_stakeholder_entrypoint = EntryPoint::new(
-            IS_STAKEHOLDER_ENTRY_POINT_NAME,
+        let is_staker_entrypoint = EntryPoint::new(
+            IS_STAKER_ENTRY_POINT_NAME,
             vec![
                 Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
                 Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
@@ -163,8 +163,8 @@ impl TestStakingToken {
             EntryPointAccess::Public,
             EntryPointType::Contract,
         );
-        let add_stakeholder_entrypoint = EntryPoint::new(
-            ADD_STAKEHOLDER_ENTRY_POINT_NAME,
+        let add_staker_entrypoint = EntryPoint::new(
+            ADD_STAKER_ENTRY_POINT_NAME,
             vec![
                 Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
                 Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
@@ -175,8 +175,8 @@ impl TestStakingToken {
             EntryPointAccess::Public,
             EntryPointType::Contract,
         );
-        let remove_stakeholder_entrypoint = EntryPoint::new(
-            REMOVE_STAKEHOLDER_ENTRY_POINT_NAME,
+        let remove_staker_entrypoint = EntryPoint::new(
+            REMOVE_STAKER_ENTRY_POINT_NAME,
             vec![
                 Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
                 Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
@@ -256,9 +256,9 @@ impl TestStakingToken {
         entry_points.add_entry_point(remove_stake_entrypoint);
         entry_points.add_entry_point(stake_of_entrypoint);
         entry_points.add_entry_point(total_stakes_entrypoint);
-        entry_points.add_entry_point(is_stakeholder_entrypoint);
-        entry_points.add_entry_point(add_stakeholder_entrypoint);
-        entry_points.add_entry_point(remove_stakeholder_entrypoint);
+        entry_points.add_entry_point(is_staker_entrypoint);
+        entry_points.add_entry_point(add_staker_entrypoint);
+        entry_points.add_entry_point(remove_staker_entrypoint);
         entry_points.add_entry_point(rewards_of_entrypoint);
         entry_points.add_entry_point(total_rewards_entrypoint);
         entry_points.add_entry_point(calculate_rewards_entrypoint);
@@ -346,27 +346,25 @@ pub extern "C" fn stake_of() {
 
 #[no_mangle]
 pub extern "C" fn total_stakes() {
-    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
-    TestStakingToken::default().total_stakes(owner, amount).unwrap_or_revert();
+    TestStakingToken::default().total_stakes().unwrap_or_revert();
 }
 
 #[no_mangle]
-pub extern "C" fn is_stakeholder() {
+pub extern "C" fn is_staker() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    TestStakingToken::default().is_stakeholder(owner).unwrap_or_revert();
+    TestStakingToken::default().is_staker(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
-pub extern "C" fn add_stakeholder() {
+pub extern "C" fn add_staker() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    TestStakingToken::default().add_stakeholder(owner).unwrap_or_revert();
+    TestStakingToken::default().add_staker(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
-pub extern "C" fn remove_stakeholder() {
+pub extern "C" fn remove_staker() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    TestStakingToken::default().remove_stakeholder(owner).unwrap_or_revert();
+    TestStakingToken::default().remove_staker(owner).unwrap_or_revert();
 }
 
 #[no_mangle]
