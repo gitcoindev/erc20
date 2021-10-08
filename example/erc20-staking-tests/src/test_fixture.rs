@@ -1,10 +1,8 @@
-use std::{collections::BTreeMap, ops::Add};
-
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
-use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder, Value, Error};
+use casper_engine_test_support::{Code, SessionBuilder, TestContext, TestContextBuilder};
 use casper_erc20::constants as consts;
 use casper_erc20::Address;
 
@@ -23,7 +21,6 @@ const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
 const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
 const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
 const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
-const REMOVE_STAKER_ENTRY_POINT_NAME: &str = "remove_staker";
 const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
 const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
 const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";

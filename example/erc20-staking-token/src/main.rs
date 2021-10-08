@@ -37,7 +37,6 @@ const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
 const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
 const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
 const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
-const REMOVE_STAKER_ENTRY_POINT_NAME: &str = "remove_staker";
 const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
 const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
 const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
@@ -181,14 +180,6 @@ pub extern "C" fn add_staker() {
 }
 
 #[no_mangle]
-pub extern "C" fn remove_staker() {
-    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    ERC20::default()
-        .remove_staker(owner)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
 pub extern "C" fn rewards_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
     ERC20::default()
@@ -270,7 +261,6 @@ fn call() {
     // total_stakes_entrypoint
     // is_staker_entrypoint
     // add_staker_entrypoint
-    // remove_staker_entrypoint
     // rewards_of_entrypoint
     // total_rewards_entrypoint
     // calculate_rewards_entrypoint
@@ -333,16 +323,6 @@ fn call() {
     );
     let add_staker_entrypoint = EntryPoint::new(
         ADD_STAKER_ENTRY_POINT_NAME,
-        vec![
-            Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
-            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
-        ],
-        CLType::Unit,
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    );
-    let remove_staker_entrypoint = EntryPoint::new(
-        REMOVE_STAKER_ENTRY_POINT_NAME,
         vec![
             Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
             Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
@@ -417,7 +397,6 @@ fn call() {
     entry_points.add_entry_point(total_stakes_entrypoint);
     entry_points.add_entry_point(is_staker_entrypoint);
     entry_points.add_entry_point(add_staker_entrypoint);
-    entry_points.add_entry_point(remove_staker_entrypoint);
     entry_points.add_entry_point(rewards_of_entrypoint);
     entry_points.add_entry_point(total_rewards_entrypoint);
     entry_points.add_entry_point(calculate_rewards_entrypoint);

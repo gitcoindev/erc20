@@ -374,17 +374,6 @@ impl ERC20 {
         Ok(())
     }
 
-    /// Removes staker
-    ///
-    /// # Security
-    ///
-    /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
-    /// public entry point.
-    pub fn remove_staker(&mut self, owner: Address) -> Result<(), Error> {
-
-        Ok(())
-    }
-
     /// Returns rewards of a staker.
     ///
     /// # Security
