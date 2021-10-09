@@ -380,8 +380,7 @@ impl ERC20 {
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn rewards_of(&mut self, owner: Address) -> Result<U256, Error> {
-        
+    pub fn reward_of(&mut self, owner: Address) -> Result<U256, Error> {
         Ok(stakes::read_reward_from(self.rewards_uref(), owner))
     }
 
@@ -391,9 +390,13 @@ impl ERC20 {
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn total_rewards(&mut self, owner: Address) -> Result<(), Error> {
+    pub fn total_rewards(&mut self) -> Result<U256, Error> {
+        let mut amount: U256 = U256::zero();
 
-        Ok(())
+        //for s in stakes::read_stakes_from(self.stakes_uref()) {
+        //    amount += s.1;
+        //}
+        Ok(amount)
     }
 
     /// Calculates reward for a staker.
@@ -402,9 +405,13 @@ impl ERC20 {
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn calculate_rewards(&mut self, owner: Address) -> Result<(), Error> {
+    pub fn calculate_rewards(&mut self, owner: Address) -> Result<U256, Error> {
+        let stakes: BTreeMap<Address, U256> = self.read_stakes();
 
-        Ok(())
+        let staked = stakes[&owner];
+        let reward = staked / 100;  // 1% of the staked amount rounded
+
+        Ok(reward)
     }
 
     /// Distribute rewards to all stakers
@@ -412,19 +419,40 @@ impl ERC20 {
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn distribute_rewards(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
+    pub fn distribute_rewards(&mut self, owner: Address) -> Result<(), Error> {
+        let stakes: BTreeMap<Address, U256> = self.read_stakes();
 
+        for (staker, _) in stakes {
+            let reward = self.calculate_rewards(staker).ok().unwrap();
+            stakes::write_reward_to(self.rewards_uref(), owner, reward);
+        }
         Ok(())
     }
 
-    /// Withdraws reward
+    /// Withdraw reward
     ///
     /// # Security
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn withdraw_reward(&mut self, owner: Address, amount: U256) -> Result<(), Error> {
- 
+    pub fn withdraw_reward(&mut self, owner: Address) -> Result<(), Error> {
+        let reward_balance = read_balance_from(self.rewards_uref(), owner);
+        
+        let new_owner_balance = {
+            let owner_balance = read_balance_from(self.balances_uref(), owner);
+            owner_balance
+                .checked_add(reward_balance)
+                .ok_or(Error::Overflow)?
+        };
+
+        write_balance_to(self.balances_uref(), owner, new_owner_balance);
+        write_balance_to(self.rewards_uref(), owner, U256::zero());
+
+        let new_total_supply = {
+            let total_supply: U256 = self.read_total_supply();
+            total_supply.checked_add(reward_balance).ok_or(Error::Overflow)?
+        };
+        self.write_total_supply(new_total_supply);
         Ok(())
     }
 

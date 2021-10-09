@@ -37,7 +37,7 @@ const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
 const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
 const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
 const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
-const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
+const REWARD_OF_ENTRY_POINT_NAME: &str = "reward_of";
 const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
 const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
 const DISTRIBUTE_REWARDS_ENTRY_POINT_NAME: &str = "distribute_rewards";
@@ -180,18 +180,17 @@ pub extern "C" fn add_staker() {
 }
 
 #[no_mangle]
-pub extern "C" fn rewards_of() {
+pub extern "C" fn reward_of() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
     ERC20::default()
-        .rewards_of(owner)
+        .reward_of(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn total_rewards() {
-    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
     ERC20::default()
-        .total_rewards(owner)
+        .total_rewards()
         .unwrap_or_revert();
 }
 
@@ -206,18 +205,16 @@ pub extern "C" fn calculate_rewards() {
 #[no_mangle]
 pub extern "C" fn distribute_rewards() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .distribute_rewards(owner, amount)
+        .distribute_rewards(owner)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 pub extern "C" fn withdraw_reward() {
     let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-    let amount: U256 = runtime::get_named_arg(AMOUNT_RUNTIME_ARG_NAME);
     ERC20::default()
-        .withdraw_reward(owner, amount)
+        .withdraw_reward(owner)
         .unwrap_or_revert();
 }
 
@@ -261,7 +258,7 @@ fn call() {
     // total_stakes_entrypoint
     // is_staker_entrypoint
     // add_staker_entrypoint
-    // rewards_of_entrypoint
+    // reward_of_entrypoint
     // total_rewards_entrypoint
     // calculate_rewards_entrypoint
     // distribute_rewards_entrypoint
@@ -331,11 +328,10 @@ fn call() {
         EntryPointAccess::Public,
         EntryPointType::Contract,
     );
-    let rewards_of_entrypoint = EntryPoint::new(
-        REWARDS_OF_ENTRY_POINT_NAME,
+    let reward_of_entrypoint = EntryPoint::new(
+        REWARD_OF_ENTRY_POINT_NAME,
         vec![
             Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
-            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
         ],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -355,7 +351,6 @@ fn call() {
         CALCULATE_REWARDS_ENTRY_POINT_NAME,
         vec![
             Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
-            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
         ],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -365,7 +360,6 @@ fn call() {
         DISTRIBUTE_REWARDS_ENTRY_POINT_NAME,
         vec![
             Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
-            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
         ],
         CLType::Unit,
         // NOTE: For security reasons never use this entrypoint definition in a production
@@ -377,7 +371,6 @@ fn call() {
         WITHDRAW_REWARD_ENTRY_POINT_NAME,
         vec![
             Parameter::new(OWNER_RUNTIME_ARG_NAME, Address::cl_type()),
-            Parameter::new(AMOUNT_RUNTIME_ARG_NAME, U256::cl_type()),
         ],
         CLType::Unit,
         // NOTE: For security reasons never use this entrypoint definition in a production
@@ -397,7 +390,7 @@ fn call() {
     entry_points.add_entry_point(total_stakes_entrypoint);
     entry_points.add_entry_point(is_staker_entrypoint);
     entry_points.add_entry_point(add_staker_entrypoint);
-    entry_points.add_entry_point(rewards_of_entrypoint);
+    entry_points.add_entry_point(reward_of_entrypoint);
     entry_points.add_entry_point(total_rewards_entrypoint);
     entry_points.add_entry_point(calculate_rewards_entrypoint);
     entry_points.add_entry_point(distribute_rewards_entrypoint);

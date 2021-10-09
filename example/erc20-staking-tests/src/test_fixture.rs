@@ -227,6 +227,25 @@ impl TestFixture {
         );
     }
 
+    pub fn distribute_rewards(&mut self, owner: Key, sender: Sender) {
+        self.call(
+            sender,
+            DISTRIBUTE_REWARDS_ENTRY_POINT_NAME,
+            runtime_args! {
+                consts::OWNER_RUNTIME_ARG_NAME => owner
+            },
+        );
+    }
+
+    pub fn withdraw_reward(&mut self, owner: Key, sender: Sender) {
+        self.call(
+            sender,WITHDRAW_REWARD_ENTRY_POINT_NAME,
+            runtime_args! {
+                consts::OWNER_RUNTIME_ARG_NAME => owner
+            },
+        );
+    }
+
     pub fn stake_of(&mut self, account: Key) -> Option<U256> {
         let item_key = base64::encode(&account.to_bytes().unwrap());
 
@@ -263,7 +282,7 @@ impl TestFixture {
             let stake_of = self
             .context
             .query_dictionary_item(
-                key, 
+                key,
                 Some(consts::STAKES_KEY_NAME.to_string()), dictionary_item_key
             )
             .ok()?;

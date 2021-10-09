@@ -87,3 +87,13 @@ pub(crate) fn add_staker(stakers_uref: URef, staker: Address) -> bool {
         false
     }
 }
+
+/// Writes an stake for owner for a specific amount.
+pub(crate) fn write_reward_to(
+    rewards_uref: URef,
+    owner: Address,
+    amount: U256,
+) {
+    let dictionary_item_key = make_dictionary_item_key(owner);
+    storage::dictionary_put(rewards_uref, &dictionary_item_key, amount)
+}
