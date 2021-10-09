@@ -239,20 +239,25 @@ impl TestFixture {
         Some(value.into_t::<U256>().unwrap())
     }
 
-    pub fn total_stakes(&mut self) -> Option<U256> {
+    fn stakers(&mut self) -> Option<Vec<Address>> {
         let key = Key::Hash(self.contract_hash().value());
 
         let stakers = self
-            .context
-            .query_dictionary_item(
-                key, Some(consts::STAKERS_KEY_NAME.to_string()), 
-                consts::STAKERS_KEY_NAME.to_string()
-            )
-            .ok()?;
+        .context
+        .query_dictionary_item(
+            key, Some(consts::STAKERS_KEY_NAME.to_string()), 
+            consts::STAKERS_KEY_NAME.to_string()
+        )
+        .ok()?;
 
+        Some(stakers.into_t::<Vec<Address>>().unwrap())
+    }
+
+    pub fn total_stakes(&mut self) -> Option<U256> {
+        let key = Key::Hash(self.contract_hash().value());
         let mut sum: U256 = U256::zero();
 
-        for s in stakers.into_t::<Vec<Address>>().unwrap() {
+        for s in self.stakers().unwrap() {
             let preimage = s.to_bytes().unwrap();
             let dictionary_item_key = base64::encode(&preimage);
             let stake_of = self
@@ -264,6 +269,27 @@ impl TestFixture {
             .ok()?;
 
             sum += stake_of.into_t::<U256>().unwrap();
+        }
+
+        Some(sum)
+    }
+
+    pub fn total_rewards(&mut self) -> Option<U256> {
+        let key = Key::Hash(self.contract_hash().value());
+        let mut sum: U256 = U256::zero();
+
+        for s in self.stakers().unwrap() {
+            let preimage = s.to_bytes().unwrap();
+            let dictionary_item_key = base64::encode(&preimage);
+            let reward_of = self
+            .context
+            .query_dictionary_item(
+                key, 
+                Some(consts::REWARDS_KEY_NAME.to_string()), dictionary_item_key
+            )
+            .ok()?;
+
+            sum += reward_of.into_t::<U256>().unwrap();
         }
 
         Some(sum)
