@@ -274,6 +274,18 @@ impl TestFixture {
         Some(sum)
     }
 
+    pub fn reward_of(&mut self, account: Key) -> Option<U256> {
+        let item_key = base64::encode(&account.to_bytes().unwrap());
+
+        let key = Key::Hash(self.contract_hash().value());
+        let value = self
+            .context
+            .query_dictionary_item(key, Some(consts::REWARDS_KEY_NAME.to_string()), item_key)
+            .ok()?;
+
+        Some(value.into_t::<U256>().unwrap())
+    }
+
     pub fn total_rewards(&mut self) -> Option<U256> {
         let key = Key::Hash(self.contract_hash().value());
         let mut sum: U256 = U256::zero();
