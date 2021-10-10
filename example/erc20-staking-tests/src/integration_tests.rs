@@ -360,6 +360,71 @@ mod tests {
     }
 
     #[test]
+    fn should_withdraw_rewards() {
+        let mut fixture = TestFixture::install_contract();
+        let stake_amount_110 = U256::from(110);
+
+        let initial_ali_balance = fixture.balance_of(
+            Key::from(fixture.ali));
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+
+        fixture.transfer(
+            Key::from(fixture.bob),
+            stake_amount_110,
+            Sender(fixture.ali),
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.bob), 
+            stake_amount_110, 
+            Sender(fixture.bob));
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_110.mul(3), 
+            Sender(fixture.ali));
+
+        fixture.distribute_rewards(
+            Key::from(fixture.ali), 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.reward_of(Key::from(fixture.ali)),
+            Some(U256::from(33))
+        );
+
+        assert_eq!(
+            fixture.reward_of(Key::from(fixture.bob)),
+            Some(U256::from(11))
+        );
+
+        fixture.withdraw_reward(
+            Key::from(fixture.ali),
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.reward_of(Key::from(fixture.ali)),
+            Some(U256::from(0))
+        );
+
+        assert_eq!(
+            fixture.stake_of(Key::from(fixture.ali)),
+            Some(stake_amount_110.mul(3))
+        );
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(initial_ali_balance.unwrap()
+            - stake_amount_110.mul(4) // 330 staked, 110 sent to bob
+            + U256::from(33)) // the reward
+        );
+    }
+
+    #[test]
     fn should_transfer_full_amount() {
         let mut fixture = TestFixture::install_contract();
 
