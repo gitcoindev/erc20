@@ -26,8 +26,6 @@ use casper_types::{
     EntryPointAccess, EntryPointType, Parameter, U256,
 };
 
-const STAKING_CONTRACT_KEY_NAME: &str = "erc20_token_contract";
-
 const MINT_ENTRY_POINT_NAME: &str = "mint";
 const BURN_ENTRY_POINT_NAME: &str = "burn";
 

@@ -26,7 +26,6 @@ mod total_supply;
 mod stakes;
 
 use alloc::string::{String, ToString};
-use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 use once_cell::unsync::OnceCell;
@@ -143,18 +142,6 @@ impl ERC20 {
 
     fn read_stakers(&self) -> Vec<Address> {
         stakes::read_stakers_from(self.stakers_uref())
-    }
-
-    fn read_stakes(&self) -> BTreeMap<Address, U256> {
-        stakes::read_stakes_from(self.stakes_uref())
-    }
-
-    fn read_stake(&self, owner: Address) -> U256 {
-        stakes::read_stake_from(self.stakes_uref(), owner)
-    }
-
-    fn read_rewards(&self) -> BTreeMap<Address, U256> {
-        stakes::read_rewards_from(self.rewards_uref())
     }
 
     ///

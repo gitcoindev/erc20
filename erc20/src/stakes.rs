@@ -1,5 +1,5 @@
 //! Implementation of stakes.
-use alloc::{collections::BTreeMap, string::String, vec::Vec};
+use alloc::{string::String, vec::Vec};
 
 use casper_contract::{
     contract_api::storage,
@@ -32,16 +32,6 @@ fn make_dictionary_item_key(owner: Address) -> String {
     base64::encode(&preimage)
 }
 
-/// Writes an stake for owner for a specific amount.
-pub(crate) fn write_stake_to(
-    stakes_uref: URef,
-    owner: Address,
-    amount: U256,
-) {
-    let dictionary_item_key = make_dictionary_item_key(owner);
-    storage::dictionary_put(stakes_uref, &dictionary_item_key, amount)
-}
-    
 /// Reads an stake for a owner
 pub(crate) fn read_stake_from(stakes_uref: URef, owner: Address) -> U256 {
     let dictionary_item_key = make_dictionary_item_key(owner);
@@ -50,22 +40,12 @@ pub(crate) fn read_stake_from(stakes_uref: URef, owner: Address) -> U256 {
         .unwrap_or_default()
 }
 
-/// Reads stakes for all owners
-pub(crate) fn read_stakes_from(stakes_uref: URef) -> BTreeMap<Address, U256> {
-    storage::read_or_revert(stakes_uref)
-}
-
 /// Reads a reward for a owner
 pub(crate) fn read_reward_from(rewards_uref: URef, owner: Address) -> U256 {
     let dictionary_item_key = make_dictionary_item_key(owner);
     storage::dictionary_get(rewards_uref, &dictionary_item_key)
         .unwrap_or_revert()
         .unwrap_or_default()
-}
-
-/// Reads rewards for all owners
-pub(crate) fn read_rewards_from(rewards_uref: URef) -> BTreeMap<Address, U256> {
-    storage::read_or_revert(rewards_uref)
 }
 
 /// Reads stakers

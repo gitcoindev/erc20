@@ -17,13 +17,6 @@ const CONTRACT_KEY_NAME: &str = "erc20_token_contract";
 
 const CREATE_STAKE_ENTRY_POINT_NAME: &str = "create_stake";
 const REMOVE_STAKE_ENTRY_POINT_NAME: &str = "remove_stake";
-const STAKE_OF_ENTRY_POINT_NAME: &str = "stake_of";
-const TOTAL_STAKES_ENTRY_POINT_NAME: &str = "total_stakes";
-const IS_STAKER_ENTRY_POINT_NAME: &str = "is_staker";
-const ADD_STAKER_ENTRY_POINT_NAME: &str = "add_staker";
-const REWARDS_OF_ENTRY_POINT_NAME: &str = "rewards_of";
-const TOTAL_REWARDS_ENTRY_POINT_NAME: &str = "total_rewards";
-const CALCULATE_REWARDS_ENTRY_POINT_NAME: &str = "calculate_rewards";
 const DISTRIBUTE_REWARDS_ENTRY_POINT_NAME: &str = "distribute_rewards";
 const WITHDRAW_REWARD_ENTRY_POINT_NAME: &str = "withdraw_reward";
 
