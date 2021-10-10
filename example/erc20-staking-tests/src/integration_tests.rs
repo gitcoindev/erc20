@@ -303,6 +303,63 @@ mod tests {
     }
 
     #[test]
+    fn should_distribute_rewards() {
+        let mut fixture = TestFixture::install_contract();
+        let stake_amount_110 = U256::from(110);
+
+        assert_eq!(
+            fixture.balance_of(Key::from(fixture.ali)),
+            Some(TestFixture::token_total_supply())
+        );
+
+        fixture.transfer(
+            Key::from(fixture.bob),
+            stake_amount_110,
+            Sender(fixture.ali),
+        );
+
+        fixture.create_stake(
+            Key::from(fixture.bob), 
+            stake_amount_110, 
+            Sender(fixture.bob));
+
+        fixture.create_stake(
+            Key::from(fixture.ali), 
+            stake_amount_110.mul(3), 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.total_stakes(),
+            Some(stake_amount_110.mul(4))
+        );
+
+        fixture.distribute_rewards(
+            Key::from(fixture.ali), 
+            Sender(fixture.ali));
+
+        assert_eq!(
+            fixture.total_stakes(),
+            Some(stake_amount_110.mul(4))
+        );
+
+        assert_eq!(
+            fixture.reward_of(Key::from(fixture.ali)),
+            Some(U256::from(33))
+        );
+
+        assert_eq!(
+            fixture.reward_of(Key::from(fixture.bob)),
+            Some(U256::from(11))
+        );
+
+        assert_eq!(
+            fixture.total_rewards(),
+            Some(U256::from(44))
+        );
+
+    }
+
+    #[test]
     fn should_transfer_full_amount() {
         let mut fixture = TestFixture::install_contract();
 

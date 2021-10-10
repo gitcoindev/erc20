@@ -23,7 +23,7 @@ use casper_erc20::{
 };
 use casper_types::{
     CLType, CLTyped, CLValue, EntryPoint,
-    EntryPointAccess, EntryPointType, EntryPoints, Parameter, U256,
+    EntryPointAccess, EntryPointType, Parameter, U256,
 };
 
 const STAKING_CONTRACT_KEY_NAME: &str = "erc20_token_contract";
@@ -204,9 +204,8 @@ pub extern "C" fn calculate_rewards() {
 
 #[no_mangle]
 pub extern "C" fn distribute_rewards() {
-    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
     ERC20::default()
-        .distribute_rewards(owner)
+        .distribute_rewards()
         .unwrap_or_revert();
 }
 

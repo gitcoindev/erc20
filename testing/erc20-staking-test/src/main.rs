@@ -365,9 +365,7 @@ pub extern "C" fn calculate_reward() {
 
 #[no_mangle]
 pub extern "C" fn distribute_rewards() {
-    let owner: Address = runtime::get_named_arg(OWNER_RUNTIME_ARG_NAME);
-
-    TestStakingToken::default().distribute_rewards(owner).unwrap_or_revert();
+    TestStakingToken::default().distribute_rewards().unwrap_or_revert();
 }
 
 #[no_mangle]

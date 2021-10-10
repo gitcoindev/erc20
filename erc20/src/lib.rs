@@ -331,18 +331,18 @@ impl ERC20 {
 
     /// Returns stake of an account.
     pub fn stake_of(&mut self, owner: Address) -> Result<U256, Error> {
-        let stakes: BTreeMap<Address, U256> = self.read_stakes();
-
-        Ok(stakes[&owner])
+        Ok(stakes::read_stake_from(self.stakes_uref(), owner))
     }
 
     /// Returns total amount staked.
     pub fn total_stakes(&mut self) -> Result<U256, Error> {
         let mut amount: U256 = U256::zero();
+        let stakers: Vec<Address> = stakes::read_stakers_from(self.stakers_uref());
 
-        //for s in stakes::read_stakes_from(self.stakes_uref()) {
-        //    amount += s.1;
-        //}
+        for s in stakers {
+            amount += stakes::read_stake_from(self.stakes_uref(), s);
+        }
+
         Ok(amount)
     }
 
@@ -393,9 +393,12 @@ impl ERC20 {
     pub fn total_rewards(&mut self) -> Result<U256, Error> {
         let mut amount: U256 = U256::zero();
 
-        //for s in stakes::read_stakes_from(self.stakes_uref()) {
-        //    amount += s.1;
-        //}
+        let stakers: Vec<Address> = stakes::read_stakers_from(self.stakers_uref());
+
+        for s in stakers {
+            amount += stakes::read_reward_from(self.rewards_uref(), s);
+        }
+
         Ok(amount)
     }
 
@@ -406,10 +409,8 @@ impl ERC20 {
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
     pub fn calculate_rewards(&mut self, owner: Address) -> Result<U256, Error> {
-        let stakes: BTreeMap<Address, U256> = self.read_stakes();
-
-        let staked = stakes[&owner];
-        let reward = staked / 100;  // 1% of the staked amount rounded
+        let staked = stakes::read_stake_from(self.stakes_uref(), owner);
+        let (reward, _) = staked.div_mod(U256::from(10));  // 10% of the staked amount without remainder
 
         Ok(reward)
     }
@@ -419,13 +420,19 @@ impl ERC20 {
     ///
     /// This offers no security whatsoever, hence it is advised to NOT expose this method through a
     /// public entry point.
-    pub fn distribute_rewards(&mut self, owner: Address) -> Result<(), Error> {
-        let stakes: BTreeMap<Address, U256> = self.read_stakes();
+    pub fn distribute_rewards(&mut self) -> Result<(), Error> {
+        let stakers: Vec<Address> = stakes::read_stakers_from(self.stakers_uref());
 
-        for (staker, _) in stakes {
-            let reward = self.calculate_rewards(staker).ok().unwrap();
-            stakes::write_reward_to(self.rewards_uref(), owner, reward);
+        for s in stakers {
+            let mut total_reward = stakes::read_reward_from(self.rewards_uref(), s);
+            let current_reward = self.calculate_rewards(s).ok().unwrap();
+            total_reward = total_reward
+                .checked_add(current_reward)
+                .ok_or(Error::Overflow)?;
+
+            stakes::write_reward_to(self.rewards_uref(), s, total_reward);
         }
+
         Ok(())
     }
 

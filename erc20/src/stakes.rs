@@ -41,7 +41,7 @@ pub(crate) fn write_stake_to(
     let dictionary_item_key = make_dictionary_item_key(owner);
     storage::dictionary_put(stakes_uref, &dictionary_item_key, amount)
 }
-
+    
 /// Reads an stake for a owner
 pub(crate) fn read_stake_from(stakes_uref: URef, owner: Address) -> U256 {
     let dictionary_item_key = make_dictionary_item_key(owner);
